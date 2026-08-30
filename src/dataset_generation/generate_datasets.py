@@ -2,7 +2,7 @@ from itertools import accumulate
 import numpy as np
 import scipy as sp
 import sys
-from utils import *
+from .utils import *
 
 
 #rng = np.random.default_rng()

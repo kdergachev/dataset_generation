@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "dataset-generation"
+version = "0.1.0"
+description = ""
+authors = ["kdergachev <kdergachev1062@gmail.com>"]
+readme = "README.md"
+packages = [{include = "dataset_generation", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "^2.0.1"
+pandas = ">=3.0.5,<4.0"
+scipy = "^1.14.0"
+jupyter = "^1.0.0"
+matplotlib = "^3.9.2"
+ipykernel = "^6.29.5"
+tqdm = "^4.70.0"
+statsmodels = "^0.15.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
