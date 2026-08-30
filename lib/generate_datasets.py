@@ -2,7 +2,6 @@ from itertools import accumulate
 import numpy as np
 import scipy as sp
 import sys
-sys.path.append('..')
 from utils import *
 
 
