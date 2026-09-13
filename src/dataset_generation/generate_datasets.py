@@ -32,29 +32,44 @@ class DataGenerator:
         return res
 
 
-    def generate_true_X(self, shape, variance=1):
+    def generate_true_X(self, shape, params):
+        ptype = params['type']
+        params = params['params']
 
-        if isinstance(variance, int):
-            variance = np.sqrt(variance)
-            X = self.rng.normal(loc=0, scale=variance, size=shape)
-        elif isinstance(variance, dict):
-            X = self.rng.normal(loc=0, scale=1, size=shape)
-            variance['n'] = shape[1]
-            variance = self.rcorrmatrix(**variance)
-            U = sp.linalg.cholesky(variance)
-            self.check_chol(U, variance)
-            X = X.dot(U)
-        elif len(variance.shape) == 1:
-            variance = np.sqrt(variance)
-            X = self.rng.normal(loc=0, scale=variance, size=shape)
+        if ptype == 'variance_int':
+            std = np.sqrt(params['value'])
+            self.true_X = self.rng.normal(loc=0, scale=std, size=shape)
+        elif ptype == 'dimension_reduction':
+            self.true_X = self.rng.normal(loc=0, scale=1, size=shape)
+            params['n'] = shape[1]
+            corr = self.rcorrmatrix(**params)
+            U = sp.linalg.cholesky(corr)
+            self.check_chol(U, corr)
+            self.true_X = self.true_X.dot(U)
+        elif ptype == 'variance_vec':
+            std = np.sqrt(params['value'])
+            self.true_X = self.rng.normal(loc=0, scale=std, size=shape)
+        elif ptype == 'condition_num':
+            self.true_X = self.generate_true_X_from_cond(shape, **params)
+        else:
+            raise RuntimeError('Unknown type provided')
+            
 
-        self.true_X = X
+
+    def generate_true_X_from_cond(self, shape, cn):
+        n, k = shape
+        Qone, _ = np.linalg.qr(self.rng.standard_normal(size=(n, k)))
+        Qtwo, _ = np.linalg.qr(self.rng.standard_normal(size=(k, k)))
+        sv = np.logspace(0, -np.log10(cn), k)
+        return Qone @ np.diag(sv) @ Qtwo.T
+
 
     def generate_coefs(self, magnitude, spread, prop_neg=0.5):
         size = self.true_X.shape[1]
         coefs = self.rng.normal(loc=magnitude, scale=magnitude*spread, size=size)
         coefs = -(self.rng.binomial(1, prop_neg, size=size)*2 - 1) * coefs
         self.coefs = coefs
+
 
     def generate_Y(self, variance=1, autocorr=0):
         #print(variance)
@@ -87,7 +102,7 @@ class DataGenerator:
 
     def from_dict(self, ddict):
         shape = ddict['shape']
-        self.generate_true_X(shape, **ddict['gen_true_X'])
+        self.generate_true_X(shape, ddict['gen_true_X'])
         self.generate_coefs(**ddict['gen_coefs'])
         self.generate_Y(**ddict['gen_Y'])
         self.generate_observed_X(**ddict['gen_obs_X'])
